@@ -1,4 +1,4 @@
-APP=rfapp
+APP=rflib
 
 # our code
 OBJS =
@@ -16,7 +16,6 @@ OBJS += ../r0ketlib/menu.o
 OBJS += ../rad1olib/spi-flash.o
 OBJS += ../rad1olib/assert.o
 OBJS += ../rad1olib/systick.o
-OBJS += ../hackrf/firmware/common/si5351c.o
 OBJS += ../fatfs/diskio.o
 OBJS += ../fatfs/ff.o
 OBJS += ../r0ketlib/select.o
@@ -43,59 +42,30 @@ OBJS += ../rad1olib/light_ws2812_cortex.o
 OBJS += ../rad1olib/battery.o
 OBJS += ../rad1olib/draw.o
 
-# CPLD
-OBJS += ../hackrf/firmware/common/xapp058/micro.o
-OBJS += ../hackrf/firmware/common/xapp058/ports.o
-OBJS += ../hackrf/firmware/common/xapp058/lenval.o
-OBJS += ../hackrf/firmware/common/cpld_jtag.o
-
 SRCS = $(wildcard *.c)
 SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
 
 OBJS += $(SOBJS)
+OBJS += m0_bin.o
 
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
-OBJS += ../hackrf/firmware/common/w25q80bv.o
-OBJS += ../hackrf/firmware/common/max2871.o
-
-OBJS += ../l0dables/jumptable.o
-
-CFLAGS+=-I../portalib
 CFLAGS+=-I../hackrf/firmware/common
-OBJS += ../portalib/portapack.o
-OBJS += ../portalib/rx_am.o
-OBJS += ../portalib/rx_fm_broadcast.o
-OBJS += ../portalib/rx_fm_narrowband.o
-OBJS += ../portalib/decimate.o
-OBJS += ../portalib/demodulate.o
-OBJS += ../portalib/fxpt_atan2.o
-OBJS += ../portalib/filters.o
-OBJS += ../portalib/portapack_state.o
-OBJS += ../portalib/specan.o
-OBJS += ../portalib/fft.o
-OBJS += ../hackrf/firmware/common/sgpio_dma.o
-OBJS += ../hackrf/firmware/common/gpdma.o
-OBJS += ../hackrf/firmware/common/tuning.o
-OBJS += ../hackrf/firmware/common/max2837.o
-OBJS += ../hackrf/firmware/common/rf_path.o
-OBJS += ../hackrf/firmware/common/max5864.o
-OBJS += ../hackrf/firmware/common/hackrf_core.o
-OBJS += ../hackrf/firmware/common/sgpio.o
-OBJS += ../hackrf/firmware/common/streaming.o
-LIBS += -lm
 
 LDSCRIPT=../ld/app.ld
 RPATH=..
 include ../Makefile.inc
-
-wfm.o : wfm.c $(DEPDIR)
-	$(CC) $(CFLAGS) -O3 $(INCLUDE_PATHS) -o $@ $<
-	$(CC) -MM $(CFLAGS) $(INCLUDE_PATHS) $< > $(df).d
 
 main.o: main.gen
 
 main.gen: $(SRCS)
 	../tools/mkfirmware.pl $(SRCS) > main.gen
 
+m0/m0.bin: m0/m0.c
+	$(MAKE) -C m0
+
+m0_bin.o: m0_bin.s m0/m0.bin
+	$(CC) $(CFLAGS) $(INCLUDE_PATHS) -o $@ m0_bin.s
+
 clean::
+	$(MAKE) -C m0
 	$(RM) main.gen

@@ -17,6 +17,7 @@ FILEORDER= \
 		rfapp.b1n \
     musicapp.b1n \
 		ccccmaze.b1n \
+		l0unge.b1n \
     testapp.b1n
 
 
@@ -31,6 +32,9 @@ gather:
 	cp ../ccccmaze/ccccmaze.b1n $(fsdir)/
 	cp ../ccccmaze/story/*.csm $(fsdir)/
 	cp ../rfapp/rfapp.b1n $(fsdir)/
+	cp ../rflib/rflib.b1n $(fsdir)/
+	cp ../l0unge/l0unge.b1n $(fsdir)/
+	cp ../hackrfapp/hkrf-app.b1n $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
 	for a in ../assets/*.led ; do ../tools/convertleds.py -o ${fsdir} $$a || exit ;done
 	-for a in ../l0dables/*.n1k ; do b=$${a##*/}; cp $$a ${fsdir}/$${b#nick_} ; done
@@ -58,6 +62,8 @@ build:
 	cd ../testapp && make testapp.b1n
 	cd ../musicapp && make musicapp.b1n
 	cd ../rfapp && make rfapp.b1n
+	cd ../rflib && make rflib.b1n
+	cd ../l0unge && make l0unge.b1n
 	cd ../ccccmaze && make ccccmaze.b1n
 	cd ../bootloader && make boot.b1n
 	cd ../flashapp && make flashapp.dfu
@@ -110,7 +116,7 @@ dfu:
 
 msc:
 	mcopy -D o -i /dev/$(UDISK) `perl order-files $(fsdir) $(FILEORDER)` ::
-	dd if=/dev/$(UDISK) skip=3071 count=1 bs=512 | dd of=/dev/$(UDISK) seek=3071 count=1 bs=512
+	dd if=/dev/$(UDISK) skip=3071 count=1 bs=512 2>/dev/null| dd of=/dev/$(UDISK) seek=3071 count=1 bs=512 2>/dev/null
 
 sdr:
 	osmocom_fft -s 10000000 -f 432000000 -g 30 --peak-hold
