@@ -6,3 +6,6 @@
 	url = https://github.com/rad1o/hackrf.git
 	branch = module
 
+[submodule "liquid-dsp"]
+	path = liquid-dsp
+	url = https://github.com/jgaeddert/liquid-dsp.git
