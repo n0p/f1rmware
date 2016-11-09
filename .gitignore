@@ -9,3 +9,4 @@
 *.gen
 .deps
 flashapp/xsvf.inc
+rflib/m0/m0.bin
