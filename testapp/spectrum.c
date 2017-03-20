@@ -24,7 +24,6 @@
 #include <common/hackrf_core.h>
 #include <common/rf_path.h>
 #include <common/sgpio.h>
-#include <common/sgpio_dma.h>
 #include <common/tuning.h>
 #include <libopencm3/lpc43xx/dac.h>
 
@@ -48,7 +47,7 @@ static volatile int displayMode = DEFAULT_MODE;
 
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
-	TOGGLE(LED2);
+	TOGGLE(RAD1O_LED2);
 	if (displayMode == MODE_SPECTRUM)
 		lcdClear();
 	else if (displayMode == MODE_WATERFALL)
@@ -90,10 +89,10 @@ void spectrum_init()
 	dac_init(false);
 	cpu_clock_set(204); // WARP SPEED! :-)
 	hackrf_clock_init();
-	rf_path_pin_setup();
+	rf_path_pin_setup(&rf_path);
 	/* Configure external clock in */
 	scu_pinmux(SCU_PINMUX_GP_CLKIN, SCU_CLK_IN | SCU_CONF_FUNCTION1);
-	sgpio_configure_pin_functions();
+	sgpio_configure_pin_functions(&sgpio_config);
 	ON(EN_VDD);
 	ON(EN_1V8);
 	OFF(MIC_AMP_DIS);
@@ -116,9 +115,8 @@ void spectrum_init()
 
 void spectrum_stop()
 {
-//	nvic_disable_irq(NVIC_DMA_IRQ);
-	sgpio_dma_stop();
-	sgpio_cpld_stream_disable();
+	portapack_stop();
+	sgpio_cpld_stream_disable(&sgpio_config);
 	OFF(EN_VDD);
 	OFF(EN_1V8);
 	ON(MIC_AMP_DIS);

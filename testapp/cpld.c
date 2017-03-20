@@ -17,6 +17,8 @@
 #include <hackrf/firmware/common/cpld_jtag.h>
 #include <hackrf/firmware/common/usb_queue.h>
 
+#include "gpio_lpc.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -25,6 +27,23 @@
 uint8_t cpld_xsvf_buffer[BLOCK];
 FIL file;
 int bytes;
+
+static struct gpio_t gpio_cpld_tdo			= GPIO(5, 18);
+static struct gpio_t gpio_cpld_tck			= GPIO(3,  0);
+static struct gpio_t gpio_cpld_tms			= GPIO(3,  4);
+static struct gpio_t gpio_cpld_tdi			= GPIO(3,  1);
+
+static jtag_gpio_t jtag_gpio_cpld = {
+	.gpio_tms = &gpio_cpld_tms,
+	.gpio_tck = &gpio_cpld_tck,
+	.gpio_tdi = &gpio_cpld_tdi,
+	.gpio_tdo = &gpio_cpld_tdo,
+};
+
+static jtag_t jtag_cpld = {
+	.gpio = &jtag_gpio_cpld,
+};
+
 
 static void refill_cpld_buffer_fs(void) {
     FRESULT res;
@@ -60,7 +79,6 @@ void cpld_menu(){
 	lcdNl();
 
 	#define WAIT_LOOP_DELAY (6000000)
-	#define ALL_LEDS  (PIN_LED1|PIN_LED2|PIN_LED3)
 	int i;
 	int error;
 	FRESULT res;
@@ -75,15 +93,15 @@ void cpld_menu(){
 	};
 	refill_cpld_buffer_fs();
 
-	error = cpld_jtag_program(sizeof(cpld_xsvf_buffer),
+	error = cpld_jtag_program(&jtag_cpld, sizeof(cpld_xsvf_buffer),
 				  cpld_xsvf_buffer,
 				  refill_cpld_buffer_fs);
 	if(error){
 	    lcdPrintln("Programming failed!");
 	    lcdPrintln(IntToStr(error,5,0));
 	    lcdDisplay();
-	    /* LED3 (Red) steady on error */
-	    ON(LED3);
+	    /* RAD1O_LED3 (Red) steady on error */
+	    ON(RAD1O_LED3);
 	    while (1);
 	};
 
@@ -92,10 +110,10 @@ void cpld_menu(){
 	lcdDisplay();
 
 	for (res=0;res<10;res++){
-	    /* blink LED1, LED2, and LED3 on success */
-	    TOGGLE(LED1);
-	    TOGGLE(LED2);
-	    TOGGLE(LED3);
+	    /* blink RAD1O_LED1, RAD1O_LED2, and RAD1O_LED3 on success */
+	    TOGGLE(RAD1O_LED1);
+	    TOGGLE(RAD1O_LED2);
+	    TOGGLE(RAD1O_LED3);
 	    for (i = 0; i < WAIT_LOOP_DELAY; i++)  /* Wait a bit. */
 		__asm__("nop");
 	};
