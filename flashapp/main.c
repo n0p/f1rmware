@@ -16,6 +16,8 @@
 #include <hackrf/firmware/hackrf_usb/usb_api_cpld.h>
 
 #include <hackrf/firmware/common/cpld_jtag.h>
+#include <hackrf/firmware/common/gpio_lpc.h>
+#include <hackrf/firmware/common/hackrf_core.h>
 
 #include <lpcapi/msc/msc_main.h>
 #include "msc/msc_disk.h"
@@ -28,7 +30,7 @@ void sys_tick_handler(void){
     incTimer();
     static int ctr=0;
     if (++ctr%50==1)
-	TOGGLE(LED2);
+	TOGGLE(RAD1O_LED2);
 };
 
 const unsigned char default_xsvf[] = {
@@ -60,21 +62,21 @@ void cpld_flash(){
 	lcdPrint(IntToStr(bytes,5,F_LONG)); lcdPrint(" bytes..."); lcdNl();
 
 	#define WAIT_LOOP_DELAY (6000000)
-	#define ALL_LEDS  (PIN_LED1|PIN_LED2|PIN_LED3)
+	#define ALL_RAD1O_LEDS  (PIN_RAD1O_LED1|PIN_RAD1O_LED2|PIN_RAD1O_LED3)
 	int i;
 	int error;
 
 	refill_cpld_buffer_fs();
 
-	error = cpld_jtag_program(sizeof(cpld_xsvf_buffer),
+	error = cpld_jtag_program(&jtag_cpld, sizeof(cpld_xsvf_buffer),
 				  cpld_xsvf_buffer,
 				  refill_cpld_buffer_fs);
 	if(error){
 	    lcdPrintln("Programming failed!");
 	    lcdPrintln(IntToStr(error,5,0));
 	    lcdDisplay();
-	    /* LED3 (Red) steady on error */
-	    ON(LED4);
+	    /* RAD1O_LED3 (Red) steady on error */
+	    ON(RAD1O_LED4);
 	    while (1);
 	};
 
@@ -116,10 +118,10 @@ int main(void) {
     SETUPgout(MIXER_EN);
     SETUPgout(MIC_AMP_DIS);
 
-    SETUPgout(LED1);
-    SETUPgout(LED2);
-    SETUPgout(LED3);
-    SETUPgout(LED4);
+    SETUPgout(RAD1O_LED1);
+    SETUPgout(RAD1O_LED2);
+    SETUPgout(RAD1O_LED3);
+    SETUPgout(RAD1O_LED4);
 
     inputInit();
     lcdInit();
@@ -133,9 +135,9 @@ int main(void) {
     full_msc();
     while(1) {
 	    delayNop(2000000);
-	    ON(LED4);
+	    ON(RAD1O_LED4);
 	    delayNop(2000000);
-	    OFF(LED4);
+	    OFF(RAD1O_LED4);
     }
     return 0;
 }
